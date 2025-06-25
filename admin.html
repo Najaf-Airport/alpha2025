@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شعبة تنسيق الطائرات - لوحة المسؤول</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <h1>
+            <img src="assets/logo.png" alt="شعار الطيران" style="height: 40px;">
+            Aircraft Coordinators
+        </h1>
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button id="logoutBtn">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="adminView" class="view">
+            <h2>لوحة تحكم المسؤول</h2>
+
+            <hr>
+
+            <h3>إدارة المستخدمين</h3>
+            <div class="input-group-inline">
+                <label for="newUserName">اسم المستخدم الجديد:</label>
+                <input type="text" id="newUserName" placeholder="أدخل اسم المستخدم">
+            </div>
+            <div class="input-group-inline">
+                <label for="newUserrEmail">البريد الإلكتروني للمستخدم الجديد:</label>
+                <input type="email" id="newUserEmail" placeholder="أدخل البريد الإلكتروني">
+            </div>
+            <div class="input-group-inline">
+                <label for="newUserPassword">كلمة المرور للمستخدم الجديد:</label>
+                <input type="password" id="newUserPassword" placeholder="أدخل كلمة المرور">
+            </div>
+            <button id="addNewUserBtn" class="add-user-btn">إضافة مستخدم جديد</button>
+            <p id="userManagementMessage" class="success-message"></p>
+            
+            <div class="table-responsive">
+                <table id="adminUsersTable">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>كلمة المرور</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
+            <hr>
+
+            <h3 id="adminStatsTitle">إحصائيات الرحلات الشهرية</h3>
+            <div class="controls-container">
+                <div class="input-group-inline">
+                    <label for="filterMonth">فلترة حسب الشهر:</label>
+                    <input type="month" id="filterMonth">
+                </div>
+                <div class="input-group-inline">
+                    <label for="filterUser">فلترة حسب المستخدم:</label>
+                    <select id="filterUser">
+                        <option value="all">جميع المستخدمين</option>
+                        </select>
+                </div>
+                <button id="applyFiltersBtn" class="primary-button">تطبيق الفلترة</button>
+            </div>
+
+            <p id="totalFlightsCount">عدد الرحلات الكلي: 0</p>
+            <div id="userStatsContainer">
+                </div>
+            <button id="exportAdminStatsToWordBtn" class="export-button">تصدير الإحصائيات إلى Word</button>
+
+            <hr>
+            
+            <h3>الرحلات التفصيلية</h3>
+            <div class="table-responsive">
+                <table id="adminAllFlightsTable">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>FLT.NO</th>
+                            <th>ON chocks</th>
+                            <th>Open Door</th>
+                            <th>Start Cleaning</th>
+                            <th>Complete Cleaning</th>
+                            <th>Ready Boarding</th>
+                            <th>Start Boarding</th>
+                            <th>Complete Boarding</th>
+                            <th>Close Door</th>
+                            <th>Off chocks</th>
+                            <th>الملاحظات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+            <button id="exportAdminAllFlightsToWordBtn" class="export-button">تصدير جميع الرحلات إلى Word</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 جميع الحقوق محفوظة</p>
+    </footer>
+
+    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+    <script type="module" src="js/script.js"></script>
+    </body>
+</html>

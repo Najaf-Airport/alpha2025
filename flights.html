@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مطار النجف الأشرف الدولي - تسجيل الرحلات</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <h1>
+            <img src="assets/logo.png" alt="شعار الطيران" style="height: 40px;">
+            Aircraft Coordinators
+        </h1>
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button id="logoutBtn">تسجيل الخروج</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="flightsView" class="view">
+            <h2 id="welcomeMessage">مرحباً بك!</h2>
+            <h3>تسجيل الرحلات اليومية - <span id="currentMonthName"></span></h3>
+            
+            <div id="flightFormsContainer">
+                </div>
+
+            <button id="saveAllFlightsBtn" class="primary-button">حفظ جميع الرحلات</button>
+            <p id="messageContainer" class="success-message"></p> <hr>
+
+            <h3>رحلاتك السابقة لهذا الشهر</h3>
+            <div class="table-responsive">
+                <table id="userPastFlightsTable">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>FLT.NO</th>
+                            <th>ON chocks Time</th>
+                            <th>Open Door Time</th>
+                            <th>Start Cleaning Time</th>
+                            <th>Complete Cleaning Time</th>
+                            <th>Ready Boarding Time</th>
+                            <th>Start Boarding Time</th>
+                            <th>Complete Boarding Time</th>
+                            <th>Close Door Time</th>
+                            <th>Off chocks Time</th>
+                            <th>الملاحظات</th>
+                            <th>الإجراءات</th> </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 جميع الحقوق محفوظة</p>
+    </footer>
+
+    <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+    <script type="module" src="js/script.js"></script>
+    </body>
+</html>
