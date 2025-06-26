@@ -6,12 +6,8 @@ import { exportAdminDataToDocx } from './docx-export.js';
 // --- DOM Elements ---
 const logoutButton = document.getElementById('logoutButton');
 const userNameDisplay = document.getElementById('userNameDisplay');
-const addNewUserBtn = document.getElementById('addNewUserBtn');
-const newUserNameInput = document.getElementById('newUserName');
-const newUserEmailInput = document.getElementById('newUserEmail');
-const newUserPasswordInput = document.getElementById('newUserPassword');
+// User management elements removed as per user request
 const userManagementMessage = document.getElementById('userManagementMessage');
-const adminUsersTableBody = document.querySelector('#adminUsersTable tbody');
 
 const monthFilter = document.getElementById('monthFilter');
 const userFilter = document.getElementById('userFilter');
@@ -30,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (user.email === 'ahmedaltalqani@gmail.com') {
                 // Admin is signed in
                 if (userNameDisplay) userNameDisplay.textContent = user.email;
-                loadAdminUsers();
                 
                 // Set current month as default filter
                 const today = new Date();
@@ -38,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const month = (today.getMonth() + 1).toString().padStart(2, '0');
                 if (monthFilter) monthFilter.value = `${year}-${month}`;
                 
+                // Load all data for the admin view
                 loadAdminData();
             } else {
                 // Regular user logged in, redirect
@@ -50,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (logoutButton) logoutButton.addEventListener('click', handleLogout);
-    if (addNewUserBtn) addNewUserBtn.addEventListener('click', handleAddNewUser);
     if (filterButton) filterButton.addEventListener('click', loadAdminData);
     if (exportStatsButton) exportStatsButton.addEventListener('click', () => exportAdminDataToDocx('stats', window.adminStatsData, monthFilter.value, userFilter.value));
     if (exportDetailedButton) exportDetailedButton.addEventListener('click', () => exportAdminDataToDocx('allFlights', window.adminDetailedFlightsData, monthFilter.value, userFilter.value));
@@ -75,112 +70,6 @@ async function handleLogout() {
     }
 }
 
-// --- User Management (Admin) ---
-async function handleAddNewUser() {
-    const name = newUserNameInput.value.trim();
-    const email = newUserEmailInput.value.trim();
-    const password = newUserPasswordInput.value.trim();
-
-    if (!name || !email || !password) {
-        showMessage(userManagementMessage, 'جميع حقول المستخدم الجديد مطلوبة.', true);
-        return;
-    }
-
-    try {
-        // Create user in Firebase Authentication
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        
-        // Store user details in Firestore
-        await db.collection('users').doc(user.uid).set({
-            name: name,
-            email: email,
-            role: 'user'
-        });
-
-        showMessage(userManagementMessage, `تمت إضافة المستخدم ${name} بنجاح.`, false);
-        newUserNameInput.value = '';
-        newUserEmailInput.value = '';
-        newUserPasswordInput.value = '';
-        loadAdminUsers();
-        loadAdminData(); // Refresh data to include the new user
-    } catch (error) {
-        console.error("Error adding user:", error);
-        if (error.code === 'auth/email-already-in-use') {
-            showMessage(userManagementMessage, 'هذا البريد الإلكتروني مسجل بالفعل.', true);
-        } else if (error.code === 'auth/weak-password') {
-             showMessage(userManagementMessage, 'كلمة المرور ضعيفة جداً. يجب أن تتكون من 6 أحرف على الأقل.', true);
-        } else {
-            showMessage(userManagementMessage, `فشل في إضافة المستخدم: ${error.message}`, true);
-        }
-    }
-}
-
-async function loadAdminUsers() {
-    if (!adminUsersTableBody) return;
-    adminUsersTableBody.innerHTML = '';
-    
-    try {
-        const usersSnapshot = await db.collection('users').get();
-        const users = [];
-        usersSnapshot.forEach(doc => {
-            const userData = doc.data();
-            if (userData.email !== 'ahmedaltalqani@gmail.com') { // Exclude admin
-                users.push({ id: doc.id, ...userData });
-            }
-        });
-        
-        users.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-        users.forEach(user => {
-            const row = adminUsersTableBody.insertRow();
-            row.insertCell(0).textContent = user.name || '';
-            row.insertCell(1).textContent = user.email || '';
-            row.insertCell(2).textContent = '********'; // Never display passwords
-            
-            const actionsCell = row.insertCell(3);
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-            deleteBtn.addEventListener('click', () => deleteUser(user.id, user.email));
-            
-            actionsCell.appendChild(deleteBtn);
-        });
-    } catch (error) {
-        console.error("Error loading users:", error);
-        showMessage(userManagementMessage, "حدث خطأ أثناء تحميل قائمة المستخدمين.", true);
-    }
-}
-
-async function deleteUser(userId, userEmail) {
-    if (confirm(`هل أنت متأكد من حذف المستخدم ${userEmail}؟ سيؤدي هذا إلى حذف جميع رحلاته بشكل دائم.`)) {
-        try {
-            // Delete user's flights from Firestore
-            const flightsSnapshot = await db.collection('flights').where('userId', '==', userId).get();
-            const batch = db.batch();
-            flightsSnapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            await batch.commit();
-
-            // Delete user from Firestore 'users' collection
-            await db.collection('users').doc(userId).delete();
-            
-            // Note: Deleting from Firebase Authentication is a server-side task
-            // and cannot be done from client-side code directly for security reasons.
-            // A Cloud Function would be needed for that.
-            // For now, this user will no longer appear in the app, but their Auth account remains.
-
-            showMessage(userManagementMessage, `تم حذف المستخدم ${userEmail} وجميع رحلاته بنجاح.`, false);
-            loadAdminUsers();
-            loadAdminData();
-        } catch (error) {
-            console.error("Error deleting user and flights:", error);
-            showMessage(userManagementMessage, `فشل في حذف المستخدم: ${error.message}`, true);
-        }
-    }
-}
-
 // --- Flight Data & Statistics (Admin) ---
 async function loadAdminData() {
     if (!flightsTableBody || !userStatsContainer || !totalFlightsSpan || !monthFilter || !userFilter) return;
@@ -200,16 +89,19 @@ async function loadAdminData() {
     const endOfMonth = new Date(year, parseInt(month), 0, 23, 59, 59, 999);
 
     try {
-        // Fetch all users
+        // Fetch all users to map user IDs to names/emails
         const usersSnapshot = await db.collection('users').get();
         const usersMap = new Map();
         usersSnapshot.forEach(doc => usersMap.set(doc.id, doc.data()));
         
-        // Fetch all flights for the selected month
+        // Populate the user filter dropdown with all users
+        populateUserFilter(usersMap);
+        
+        // Fetch all flights for the selected month from all users
         const flightsRef = db.collection('flights');
         const querySnapshot = await flightsRef
-            .where('timestamp', '>=', startOfMonth.toISOString())
-            .where('timestamp', '<=', endOfMonth.toISOString())
+            .where('timestamp', '>=', startOfMonth.getTime()) // Use timestamp (milliseconds)
+            .where('timestamp', '<=', endOfMonth.getTime())
             .orderBy('timestamp', 'asc')
             .get();
         
@@ -220,19 +112,16 @@ async function loadAdminData() {
             const flight = doc.data();
             allFlightsFiltered.push({ id: doc.id, ...flight });
             
-            // Count flights per user
-            const userEmail = flight.userEmail;
+            // Count flights per user using the user's email
+            const userEmail = usersMap.get(flight.userId)?.email || 'غير معروف';
             userFlightCounts[userEmail] = (userFlightCounts[userEmail] || 0) + 1;
         });
-
-        // Populate the user filter dropdown
-        populateUserFilter(usersMap);
 
         // Filter flights for display based on user selection
         const selectedUserEmail = userFilter.value;
         const flightsToDisplay = selectedUserEmail === 'all' 
             ? allFlightsFiltered 
-            : allFlightsFiltered.filter(flight => flight.userEmail === selectedUserEmail);
+            : allFlightsFiltered.filter(flight => usersMap.get(flight.userId)?.email === selectedUserEmail);
             
         // Save data to global scope for export functions
         window.adminStatsData = { userFlightCounts, totalFlights: allFlightsFiltered.length, allUsersMap: usersMap };
@@ -270,7 +159,7 @@ function displayAdminFlights(flights, usersMap) {
     if (flights.length === 0) {
         const row = flightsTableBody.insertRow();
         const cell = row.insertCell(0);
-        cell.colSpan = 13; // Adjusted colSpan
+        cell.colSpan = 7; // Adjusted colSpan to match table headers
         cell.textContent = 'لا توجد رحلات لعرضها بالفلاتر المحددة.';
         cell.style.textAlign = 'center';
         cell.style.color = '#777';
@@ -286,7 +175,7 @@ function displayAdminFlights(flights, usersMap) {
         row.insertCell(2).textContent = flight.onChocksTime || '';
         row.insertCell(3).textContent = flight.offChocksTime || '';
         row.insertCell(4).textContent = flight.notes || '';
-        row.insertCell(5).textContent = usersMap.get(flight.userId)?.name || flight.userName || 'غير معروف';
+        row.insertCell(5).textContent = usersMap.get(flight.userId)?.name || 'غير معروف';
 
         const actionsCell = row.insertCell(6);
         const editBtn = document.createElement('button');
@@ -319,7 +208,11 @@ function displayAdminStats(userFlightCounts, totalFlights, usersMap) {
     for (const userEmail of sortedUserEmails) {
         if (userEmail === 'ahmedaltalqani@gmail.com') continue; // Skip admin
         
-        const userName = usersMap.get(userEmail)?.name || `المستخدم (${userEmail.split('@')[0]})`;
+        const userName = usersMap.get(
+            // Find user ID from email in usersMap
+            Array.from(usersMap.entries()).find(([key, value]) => value.email === userEmail)?.[0]
+        )?.name || `المستخدم (${userEmail.split('@')[0]})`;
+        
         const count = userFlightCounts[userEmail];
         
         const statCard = document.createElement('div');
@@ -349,7 +242,7 @@ async function editFlight(flight) {
     }
 }
 
-async function deleteFlight(docId, userEmail) {
+async function deleteFlight(docId) { // Removed userEmail from params as it's not used
     if (confirm("هل أنت متأكد من حذف هذه الرحلة؟")) {
         try {
             await db.collection('flights').doc(docId).delete();
