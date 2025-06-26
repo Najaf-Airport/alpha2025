@@ -15,20 +15,67 @@
             Aircraft Coordinators
         </h1>
         <div class="user-info">
-            <span id="userEmail"></span>
-            <button id="logoutBtn">تسجيل الخروج</button>
+            <span id="userNameDisplay"></span>
+            <button id="logoutButton">تسجيل الخروج</button>
         </div>
     </header>
 
     <main>
         <section id="flightsView" class="view">
-            <h2 id="welcomeMessage">مرحباً بك!</h2>
-            <h3>تسجيل الرحلات اليومية - <span id="currentMonthName"></span></h3>
+            <h2 id="userNameDisplay-header">مرحباً بك!</h2>
+            <h3>تسجيل الرحلات اليومية</h3>
             
-            <div id="flightFormsContainer">
+            <form id="flightForm">
+                <div class="input-group">
+                    <label for="fltNo">رقم الرحلة (FLT.NO):</label>
+                    <input type="text" id="fltNo" name="fltNo" required>
                 </div>
-
-            <button id="saveAllFlightsBtn" class="primary-button">حفظ جميع الرحلات</button>
+                <div class="input-group">
+                    <label for="date">التاريخ:</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                <div class="input-group">
+                    <label for="onChocksTime">ON chocks Time:</label>
+                    <input type="time" id="onChocksTime" name="onChocksTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="openDoorTime">Open Door Time:</label>
+                    <input type="time" id="openDoorTime" name="openDoorTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="startCleaningTime">Start Cleaning Time:</label>
+                    <input type="time" id="startCleaningTime" name="startCleaningTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="completeCleaningTime">Complete Cleaning Time:</label>
+                    <input type="time" id="completeCleaningTime" name="completeCleaningTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="readyBoardingTime">Ready Boarding Time:</label>
+                    <input type="time" id="readyBoardingTime" name="readyBoardingTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="startBoardingTime">Start Boarding Time:</label>
+                    <input type="time" id="startBoardingTime" name="startBoardingTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="completeBoardingTime">Complete Boarding Time:</label>
+                    <input type="time" id="completeBoardingTime" name="completeBoardingTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="closeDoorTime">Close Door Time:</label>
+                    <input type="time" id="closeDoorTime" name="closeDoorTime" required>
+                </div>
+                <div class="input-group">
+                    <label for="offChocksTime">Off chocks Time:</label>
+                    <input type="time" id="offChocksTime" name="offChocksTime" required>
+                </div>
+                <div class="input-group full-width">
+                    <label for="notes">الملاحظات:</label>
+                    <textarea id="notes" name="notes" placeholder="ملاحظات إضافية"></textarea>
+                </div>
+                <button type="submit" class="primary-button">إضافة رحلة</button>
+            </form>
             <p id="messageContainer" class="success-message"></p> <hr>
 
             <h3>رحلاتك السابقة لهذا الشهر</h3>
@@ -39,18 +86,11 @@
                             <th>التاريخ</th>
                             <th>FLT.NO</th>
                             <th>ON chocks Time</th>
-                            <th>Open Door Time</th>
-                            <th>Start Cleaning Time</th>
-                            <th>Complete Cleaning Time</th>
-                            <th>Ready Boarding Time</th>
-                            <th>Start Boarding Time</th>
-                            <th>Complete Boarding Time</th>
-                            <th>Close Door Time</th>
                             <th>Off chocks Time</th>
                             <th>الملاحظات</th>
                             <th>الإجراءات</th> </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="flightsList">
                         </tbody>
                 </table>
             </div>
@@ -62,6 +102,6 @@
     </footer>
 
     <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
-    <script type="module" src="js/script.js"></script>
-    </body>
+    <script type="module" src="js/flights.js"></script>
+</body>
 </html>
