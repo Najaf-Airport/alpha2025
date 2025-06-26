@@ -6,8 +6,12 @@
     <title>مطار النجف الأشرف الدولي - تسجيل الدخول</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    </head>
+<body class="login-page">
 
     <header>
         <h1>
@@ -29,7 +33,8 @@
                     <label for="password">كلمة المرور:</label>
                     <input type="password" id="password" required>
                 </div>
-                <button type="submit">تسجيل الدخول</button>
+                <button type="button" id="loginButton">دخول</button>
+                <button type="button" id="signupButton">تسجيل جديد</button>
                 <p id="loginMessage" class="error-message"></p>
             </form>
             <p class="contact-note">لأي استفسار يرجى الاتصال بمسؤول الشعبة - السيد احمد الطالقاني.</p>
@@ -40,7 +45,26 @@
         <p>&copy; 2025 جميع الحقوق محفوظة</p>
     </footer>
 
+    <script>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAIz4dQIZS41PcfL3qXOhc-ybouBZWMjuc",
+        authDomain: "najfe2025.firebaseapp.com",
+        projectId: "najfe2025",
+        storageBucket: "najfe2025.firebasestorage.app",
+        messagingSenderId: "113306479969",
+        appId: "1:113306479969:web:27a72a1c3da7918a18e920",
+        measurementId: "G-6FPSTZH2X1"
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      
+      // Initialize Auth and Firestore
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+    </script>
     <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
-    <script type="module" src="js/script.js"></script>
-    </body>
+    <script type="module" src="js/login.js"></script>
+</body>
 </html>
