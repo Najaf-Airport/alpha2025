@@ -25,76 +25,226 @@
             <h2 id="userNameDisplay-header">مرحباً بك!</h2>
             <h3>تسجيل الرحلات اليومية</h3>
             
-            <form id="flightForm">
-                <div class="input-group">
-                    <label for="fltNo">رقم الرحلة (FLT.NO):</label>
-                    <input type="text" id="fltNo" name="fltNo" required>
-                </div>
-                <div class="input-group">
-                    <label for="date">التاريخ:</label>
-                    <input type="date" id="date" name="date" required>
-                </div>
-                <div class="input-group">
-                    <label for="onChocksTime">ON chocks Time:</label>
-                    <input type="time" id="onChocksTime" name="onChocksTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="openDoorTime">Open Door Time:</label>
-                    <input type="time" id="openDoorTime" name="openDoorTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="startCleaningTime">Start Cleaning Time:</label>
-                    <input type="time" id="startCleaningTime" name="startCleaningTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="completeCleaningTime">Complete Cleaning Time:</label>
-                    <input type="time" id="completeCleaningTime" name="completeCleaningTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="readyBoardingTime">Ready Boarding Time:</label>
-                    <input type="time" id="readyBoardingTime" name="readyBoardingTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="startBoardingTime">Start Boarding Time:</label>
-                    <input type="time" id="startBoardingTime" name="startBoardingTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="completeBoardingTime">Complete Boarding Time:</label>
-                    <input type="time" id="completeBoardingTime" name="completeBoardingTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="closeDoorTime">Close Door Time:</label>
-                    <input type="time" id="closeDoorTime" name="closeDoorTime" required>
-                </div>
-                <div class="input-group">
-                    <label for="offChocksTime">Off chocks Time:</label>
-                    <input type="time" id="offChocksTime" name="offChocksTime" required>
-                </div>
-                <div class="input-group full-width">
-                    <label for="notes">الملاحظات:</label>
-                    <textarea id="notes" name="notes" placeholder="ملاحظات إضافية"></textarea>
-                </div>
-                <button type="submit" class="primary-button">إضافة رحلة</button>
-            </form>
-            <p id="messageContainer" class="success-message"></p> <hr>
-
-            <h3>رحلاتك السابقة لهذا الشهر</h3>
-            <div class="table-responsive">
-                <table id="userPastFlightsTable">
-                    <thead>
-                        <tr>
-                            <th>التاريخ</th>
-                            <th>FLT.NO</th>
-                            <th>ON chocks Time</th>
-                            <th>Off chocks Time</th>
-                            <th>الملاحظات</th>
-                            <th>الإجراءات</th> </tr>
-                    </thead>
-                    <tbody id="flightsList">
-                        </tbody>
-                </table>
+            <div class="flight-card">
+                <h4>بيانات الرحلة 1</h4>
+                <form id="flightForm1">
+                    <div class="input-group">
+                        <label for="fltNo1">رقم الرحلة (FLT.NO):</label>
+                        <input type="text" id="fltNo1" name="fltNo1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="date1">التاريخ:</label>
+                        <input type="date" id="date1" name="date1">
+                    </div>
+                    <div class="input-group">
+                        <label for="onChocksTime1">ON chocks Time:</label>
+                        <input type="time" id="onChocksTime1" name="onChocksTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="openDoorTime1">Open Door Time:</label>
+                        <input type="time" id="openDoorTime1" name="openDoorTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="startCleaningTime1">Start Cleaning Time:</label>
+                        <input type="time" id="startCleaningTime1" name="startCleaningTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeCleaningTime1">Complete Cleaning Time:</label>
+                        <input type="time" id="completeCleaningTime1" name="completeCleaningTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="readyBoardingTime1">Ready Boarding Time:</label>
+                        <input type="time" id="readyBoardingTime1" name="readyBoardingTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="startBoardingTime1">Start Boarding Time:</label>
+                        <input type="time" id="startBoardingTime1" name="startBoardingTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeBoardingTime1">Complete Boarding Time:</label>
+                        <input type="time" id="completeBoardingTime1" name="completeBoardingTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="closeDoorTime1">Close Door Time:</label>
+                        <input type="time" id="closeDoorTime1" name="closeDoorTime1">
+                    </div>
+                    <div class="input-group">
+                        <label for="offChocksTime1">Off chocks Time:</label>
+                        <input type="time" id="offChocksTime1" name="offChocksTime1">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="notes1">الملاحظات:</label>
+                        <textarea id="notes1" name="notes1" placeholder="ملاحظات إضافية"></textarea>
+                    </div>
+                    <button type="submit" class="primary-button">إضافة رحلة 1</button>
+                </form>
             </div>
-        </section>
+            <div class="flight-card">
+                <h4>بيانات الرحلة 2</h4>
+                <form id="flightForm2">
+                    <div class="input-group">
+                        <label for="fltNo2">رقم الرحلة (FLT.NO):</label>
+                        <input type="text" id="fltNo2" name="fltNo2" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="date2">التاريخ:</label>
+                        <input type="date" id="date2" name="date2">
+                    </div>
+                    <div class="input-group">
+                        <label for="onChocksTime2">ON chocks Time:</label>
+                        <input type="time" id="onChocksTime2" name="onChocksTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="openDoorTime2">Open Door Time:</label>
+                        <input type="time" id="openDoorTime2" name="openDoorTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="startCleaningTime2">Start Cleaning Time:</label>
+                        <input type="time" id="startCleaningTime2" name="startCleaningTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeCleaningTime2">Complete Cleaning Time:</label>
+                        <input type="time" id="completeCleaningTime2" name="completeCleaningTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="readyBoardingTime2">Ready Boarding Time:</label>
+                        <input type="time" id="readyBoardingTime2" name="readyBoardingTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="startBoardingTime2">Start Boarding Time:</label>
+                        <input type="time" id="startBoardingTime2" name="startBoardingTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeBoardingTime2">Complete Boarding Time:</label>
+                        <input type="time" id="completeBoardingTime2" name="completeBoardingTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="closeDoorTime2">Close Door Time:</label>
+                        <input type="time" id="closeDoorTime2" name="closeDoorTime2">
+                    </div>
+                    <div class="input-group">
+                        <label for="offChocksTime2">Off chocks Time:</label>
+                        <input type="time" id="offChocksTime2" name="offChocksTime2">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="notes2">الملاحظات:</label>
+                        <textarea id="notes2" name="notes2" placeholder="ملاحظات إضافية"></textarea>
+                    </div>
+                    <button type="submit" class="primary-button">إضافة رحلة 2</button>
+                </form>
+            </div>
+            <div class="flight-card">
+                <h4>بيانات الرحلة 3</h4>
+                <form id="flightForm3">
+                    <div class="input-group">
+                        <label for="fltNo3">رقم الرحلة (FLT.NO):</label>
+                        <input type="text" id="fltNo3" name="fltNo3" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="date3">التاريخ:</label>
+                        <input type="date" id="date3" name="date3">
+                    </div>
+                    <div class="input-group">
+                        <label for="onChocksTime3">ON chocks Time:</label>
+                        <input type="time" id="onChocksTime3" name="onChocksTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="openDoorTime3">Open Door Time:</label>
+                        <input type="time" id="openDoorTime3" name="openDoorTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="startCleaningTime3">Start Cleaning Time:</label>
+                        <input type="time" id="startCleaningTime3" name="startCleaningTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeCleaningTime3">Complete Cleaning Time:</label>
+                        <input type="time" id="completeCleaningTime3" name="completeCleaningTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="readyBoardingTime3">Ready Boarding Time:</label>
+                        <input type="time" id="readyBoardingTime3" name="readyBoardingTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="startBoardingTime3">Start Boarding Time:</label>
+                        <input type="time" id="startBoardingTime3" name="startBoardingTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeBoardingTime3">Complete Boarding Time:</label>
+                        <input type="time" id="completeBoardingTime3" name="completeBoardingTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="closeDoorTime3">Close Door Time:</label>
+                        <input type="time" id="closeDoorTime3" name="closeDoorTime3">
+                    </div>
+                    <div class="input-group">
+                        <label for="offChocksTime3">Off chocks Time:</label>
+                        <input type="time" id="offChocksTime3" name="offChocksTime3">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="notes3">الملاحظات:</label>
+                        <textarea id="notes3" name="notes3" placeholder="ملاحظات إضافية"></textarea>
+                    </div>
+                    <button type="submit" class="primary-button">إضافة رحلة 3</button>
+                </form>
+            </div>
+            <div class="flight-card">
+                <h4>بيانات الرحلة 4</h4>
+                <form id="flightForm4">
+                    <div class="input-group">
+                        <label for="fltNo4">رقم الرحلة (FLT.NO):</label>
+                        <input type="text" id="fltNo4" name="fltNo4" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="date4">التاريخ:</label>
+                        <input type="date" id="date4" name="date4">
+                    </div>
+                    <div class="input-group">
+                        <label for="onChocksTime4">ON chocks Time:</label>
+                        <input type="time" id="onChocksTime4" name="onChocksTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="openDoorTime4">Open Door Time:</label>
+                        <input type="time" id="openDoorTime4" name="openDoorTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="startCleaningTime4">Start Cleaning Time:</label>
+                        <input type="time" id="startCleaningTime4" name="startCleaningTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeCleaningTime4">Complete Cleaning Time:</label>
+                        <input type="time" id="completeCleaningTime4" name="completeCleaningTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="readyBoardingTime4">Ready Boarding Time:</label>
+                        <input type="time" id="readyBoardingTime4" name="readyBoardingTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="startBoardingTime4">Start Boarding Time:</label>
+                        <input type="time" id="startBoardingTime4" name="startBoardingTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="completeBoardingTime4">Complete Boarding Time:</label>
+                        <input type="time" id="completeBoardingTime4" name="completeBoardingTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="closeDoorTime4">Close Door Time:</label>
+                        <input type="time" id="closeDoorTime4" name="closeDoorTime4">
+                    </div>
+                    <div class="input-group">
+                        <label for="offChocksTime4">Off chocks Time:</label>
+                        <input type="time" id="offChocksTime4" name="offChocksTime4">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="notes4">الملاحظات:</label>
+                        <textarea id="notes4" name="notes4" placeholder="ملاحظات إضافية"></textarea>
+                    </div>
+                    <button type="submit" class="primary-button">إضافة رحلة 4</button>
+                </form>
+            </div>
+            <p id="messageContainer" class="success-message"></p>
+            <hr>
+
+            </section>
     </main>
 
     <footer>
