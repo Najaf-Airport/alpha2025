@@ -7,9 +7,13 @@ import { exportSingleFlightToDocx } from './docx-export.js';
 const logoutButton = document.getElementById('logoutButton');
 const userNameDisplay = document.getElementById('userNameDisplay');
 const userNameDisplayHeader = document.getElementById('userNameDisplay-header');
-const flightForm = document.getElementById('flightForm');
 const messageContainer = document.getElementById('messageContainer');
-const flightsList = document.getElementById('flightsList');
+
+// Get all four flight forms by their IDs
+const flightForm1 = document.getElementById('flightForm1');
+const flightForm2 = document.getElementById('flightForm2');
+const flightForm3 = document.getElementById('flightForm3');
+const flightForm4 = document.getElementById('flightForm4');
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Regular user logged in
                 displayUserInfo(user);
-                loadUserFlights(user.uid);
+                // loadUserFlights(user.uid); // This is removed as per user request
             }
         } else {
             // No user is signed in, redirect to login page
@@ -31,7 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (logoutButton) logoutButton.addEventListener('click', handleLogout);
-    if (flightForm) flightForm.addEventListener('submit', handleFlightFormSubmit);
+    
+    // Add event listeners for all four forms
+    if (flightForm1) flightForm1.addEventListener('submit', (e) => handleFlightFormSubmit(e, 1));
+    if (flightForm2) flightForm2.addEventListener('submit', (e) => handleFlightFormSubmit(e, 2));
+    if (flightForm3) flightForm3.addEventListener('submit', (e) => handleFlightFormSubmit(e, 3));
+    if (flightForm4) flightForm4.addEventListener('submit', (e) => handleFlightFormSubmit(e, 4));
 });
 
 // --- Utility Functions ---
@@ -61,7 +70,7 @@ async function displayUserInfo(user) {
         const userDoc = await db.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
             const userData = userDoc.data();
-            if (userNameDisplay) userNameDisplay.textContent = user.email;
+            if (userNameDisplay) userNameDisplay.textContent = userData.name || user.email;
             if (userNameDisplayHeader) userNameDisplayHeader.textContent = `مرحباً بك، ${userData.name || 'مستخدم'}!`;
         } else {
             // Fallback if user document doesn't exist
@@ -75,19 +84,47 @@ async function displayUserInfo(user) {
     }
 }
 
-async function handleFlightFormSubmit(e) {
+async function handleFlightFormSubmit(e, formNumber) {
     e.preventDefault();
     const currentUser = auth.currentUser;
-    if (!currentUser) return; // Should not happen if page is protected
+    if (!currentUser) return;
 
-    const formData = new FormData(flightForm);
+    // Get the specific form that was submitted
+    const form = document.getElementById(`flightForm${formNumber}`);
+    if (!form) return;
+
+    const fltNoInput = document.getElementById(`fltNo${formNumber}`);
+    const dateInput = document.getElementById(`date${formNumber}`);
+    
+    // Check if FLT.NO is filled, as it's the only required field.
+    if (!fltNoInput.value.trim()) {
+        showMessage(messageContainer, `الرجاء إدخال رقم الرحلة (FLT.NO) في البطاقة ${formNumber}.`, true);
+        return;
+    }
+    
+    // Check if at least one field is filled besides fltNo
+    const formData = new FormData(form);
+    let isFormEmpty = true;
+    for (const [key, value] of formData.entries()) {
+        if (key !== `fltNo${formNumber}` && key !== `date${formNumber}` && value.trim() !== '') {
+            isFormEmpty = false;
+            break;
+        }
+    }
+
+    // Don't save if only the flight number is entered
+    if (isFormEmpty && !fltNoInput.value.trim()) {
+         showMessage(messageContainer, `الرجاء ملء حقل رقم الرحلة (FLT.NO) على الأقل في البطاقة ${formNumber}.`, true);
+         return;
+    }
+
     const flightData = {
-        userEmail: currentUser.email,
         userId: currentUser.uid,
-        timestamp: new Date().toISOString()
+        userEmail: currentUser.email,
+        timestamp: new Date().getTime() // Use timestamp in milliseconds for easier querying
     };
     
-    // Get user's name
+    // Get user's name from Firestore
     const userDoc = await db.collection('users').doc(currentUser.uid).get();
     if (userDoc.exists) {
         flightData.userName = userDoc.data().name;
@@ -95,85 +132,20 @@ async function handleFlightFormSubmit(e) {
         flightData.userName = currentUser.email; // Fallback
     }
 
-    let isFormEmpty = true;
-    for (const [key, value] of formData.entries()) {
-        flightData[key] = value.trim();
-        if (value.trim() !== '') {
-            isFormEmpty = false;
-        }
-    }
-
-    if (isFormEmpty) {
-        showMessage(messageContainer, 'الرجاء ملء الحقول المطلوبة قبل الإضافة.', true);
-        return;
-    }
-
-    if (!flightData.date || !flightData.fltNo) {
-        showMessage(messageContainer, 'حقل التاريخ ورقم الرحلة (FLT.NO) إجباريان.', true);
-        return;
-    }
+    // Populate flightData object with form values
+    formData.forEach((value, key) => {
+        // Remove the form number suffix from the key (e.g., fltNo1 -> fltNo)
+        const newKey = key.replace(formNumber, '');
+        flightData[newKey] = value.trim() || '';
+    });
 
     try {
-        // Add a new document with a generated ID to the 'flights' collection
+        // Add a new document to the 'flights' collection
         await db.collection('flights').add(flightData);
-        showMessage(messageContainer, 'تمت إضافة الرحلة بنجاح!', false);
-        flightForm.reset(); // Clear the form
-        loadUserFlights(currentUser.uid); // Refresh the table
+        showMessage(messageContainer, `تمت إضافة بيانات الرحلة ${fltNoInput.value} بنجاح!`, false);
+        form.reset(); // Clear the specific form
     } catch (error) {
         console.error("Error adding flight document: ", error);
-        showMessage(messageContainer, 'حدث خطأ أثناء إضافة الرحلة.', true);
-    }
-}
-
-async function loadUserFlights(userId) {
-    if (!flightsList) return;
-    flightsList.innerHTML = ''; // Clear the table
-
-    try {
-        const today = new Date();
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-
-        // Fetch flights for the current user within the current month
-        const flightsRef = db.collection('flights');
-        const querySnapshot = await flightsRef
-            .where('userId', '==', userId)
-            .where('timestamp', '>=', startOfMonth.toISOString())
-            .where('timestamp', '<=', endOfMonth.toISOString())
-            .orderBy('timestamp', 'desc') // Order by latest first
-            .get();
-
-        if (querySnapshot.empty) {
-            const row = flightsList.insertRow();
-            const cell = row.insertCell(0);
-            cell.colSpan = 6; // Adjusted to match the new table structure
-            cell.textContent = 'لا توجد رحلات مسجلة لهذا الشهر.';
-            cell.style.textAlign = 'center';
-            cell.style.color = '#777';
-            return;
-        }
-
-        querySnapshot.forEach(doc => {
-            const flight = doc.data();
-            const row = flightsList.insertRow();
-            row.dataset.docId = doc.id; // Store Firebase document ID
-
-            row.insertCell(0).textContent = flight.date || '';
-            row.insertCell(1).textContent = flight.fltNo || '';
-            row.insertCell(2).textContent = flight.onChocksTime || '';
-            row.insertCell(3).textContent = flight.offChocksTime || '';
-            row.insertCell(4).textContent = flight.notes || '';
-
-            const actionsCell = row.insertCell(5);
-            const exportBtn = document.createElement('button');
-            exportBtn.className = 'export-btn small-btn';
-            exportBtn.innerHTML = '<i class="fas fa-file-word"></i> تصدير';
-            exportBtn.addEventListener('click', () => exportSingleFlightToDocx(flight));
-            actionsCell.appendChild(exportBtn);
-        });
-
-    } catch (error) {
-        console.error("Error loading user flights: ", error);
-        showMessage(messageContainer, 'حدث خطأ أثناء تحميل الرحلات.', true);
+        showMessage(messageContainer, `حدث خطأ أثناء إضافة الرحلة ${fltNoInput.value}.`, true);
     }
 }
