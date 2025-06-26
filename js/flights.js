@@ -1,5 +1,5 @@
 // --- Supabase Imports and Initialization ---
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.4/dist/module/index.js'
 
 // You provided these keys, so we'll use them directly.
 const supabaseUrl = 'https://sbtxdlgdbajxnqrkggyh.supabase.co';
