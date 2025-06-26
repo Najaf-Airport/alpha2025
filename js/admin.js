@@ -6,7 +6,6 @@ import { exportAdminDataToDocx } from './docx-export.js';
 // --- DOM Elements ---
 const logoutButton = document.getElementById('logoutButton');
 const userNameDisplay = document.getElementById('userNameDisplay');
-// User management elements removed as per user request
 const userManagementMessage = document.getElementById('userManagementMessage');
 
 const monthFilter = document.getElementById('monthFilter');
@@ -100,8 +99,8 @@ async function loadAdminData() {
         // Fetch all flights for the selected month from all users
         const flightsRef = db.collection('flights');
         const querySnapshot = await flightsRef
-            .where('timestamp', '>=', startOfMonth.getTime()) // Use timestamp (milliseconds)
-            .where('timestamp', '<=', endOfMonth.getTime())
+            .where('timestamp', '>=', startOfMonth.getTime()) // **FIX: Query using number timestamp**
+            .where('timestamp', '<=', endOfMonth.getTime()) // **FIX: Query using number timestamp**
             .orderBy('timestamp', 'asc')
             .get();
         
@@ -159,7 +158,7 @@ function displayAdminFlights(flights, usersMap) {
     if (flights.length === 0) {
         const row = flightsTableBody.insertRow();
         const cell = row.insertCell(0);
-        cell.colSpan = 7; // Adjusted colSpan to match table headers
+        cell.colSpan = 7;
         cell.textContent = 'لا توجد رحلات لعرضها بالفلاتر المحددة.';
         cell.style.textAlign = 'center';
         cell.style.color = '#777';
@@ -186,7 +185,7 @@ function displayAdminFlights(flights, usersMap) {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-        deleteBtn.addEventListener('click', () => deleteFlight(flight.id, flight.userEmail));
+        deleteBtn.addEventListener('click', () => deleteFlight(flight.id));
         
         actionsCell.appendChild(editBtn);
         actionsCell.appendChild(deleteBtn);
@@ -200,18 +199,16 @@ function displayAdminStats(userFlightCounts, totalFlights, usersMap) {
     totalFlightsSpan.textContent = totalFlights;
 
     const sortedUserEmails = Object.keys(userFlightCounts).sort((a, b) => {
-        const nameA = usersMap.get(a)?.name || '';
-        const nameB = usersMap.get(b)?.name || '';
+        // Find user names to sort by name
+        const nameA = Array.from(usersMap.values()).find(user => user.email === a)?.name || '';
+        const nameB = Array.from(usersMap.values()).find(user => user.email === b)?.name || '';
         return nameA.localeCompare(nameB);
     });
 
     for (const userEmail of sortedUserEmails) {
         if (userEmail === 'ahmedaltalqani@gmail.com') continue; // Skip admin
         
-        const userName = usersMap.get(
-            // Find user ID from email in usersMap
-            Array.from(usersMap.entries()).find(([key, value]) => value.email === userEmail)?.[0]
-        )?.name || `المستخدم (${userEmail.split('@')[0]})`;
+        const userName = Array.from(usersMap.values()).find(user => user.email === userEmail)?.name || `المستخدم (${userEmail.split('@')[0]})`;
         
         const count = userFlightCounts[userEmail];
         
@@ -242,7 +239,7 @@ async function editFlight(flight) {
     }
 }
 
-async function deleteFlight(docId) { // Removed userEmail from params as it's not used
+async function deleteFlight(docId) {
     if (confirm("هل أنت متأكد من حذف هذه الرحلة؟")) {
         try {
             await db.collection('flights').doc(docId).delete();
