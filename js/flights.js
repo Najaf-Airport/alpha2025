@@ -1,7 +1,7 @@
-// --- Firebase Modular SDK Imports ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, getDoc, query, where, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js";
+// --- Firebase Modular SDK Imports (Version 9) ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, getDoc, query, where, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { exportSingleFlightToDocx } from './docx-export.js';
 
 // --- Your web app's Firebase configuration ---
