@@ -1,7 +1,18 @@
-// --- Firebase Modular SDK Imports (Version 9) ---
+// --- Supabase Imports and Initialization ---
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+
+// You provided these keys, so we'll use them directly.
+const supabaseUrl = 'https://sbtxdlgdbajxnqrkggyh.supabase.co';
+const supabaseAnonKey = 'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNidHhkbGdkYmFqeG5xcmtnZ3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NjYyMjcsImV4cCI6MjA2NjU0MjIyN30.5j1vklOh3_XznXp0E-thW701FJV2T-8sxX1_1lY_EZo';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// --- Firebase Auth Imports (Keep for authentication) ---
+// We will continue to use Firebase for user authentication, as migrating it is more complex.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, getDoc, query, where, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+// NOTE: Firebase Firestore imports (getFirestore, collection, etc.) have been removed.
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"; // getDoc is still needed for user data
 import { exportSingleFlightToDocx } from './docx-export.js';
 
 // --- Your web app's Firebase configuration ---
@@ -15,10 +26,10 @@ const firebaseConfig = {
     measurementId: "G-6FPSTZH2X1"
 };
 
-// --- Initialize Firebase and services ---
+// --- Initialize Firebase Auth and services ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = getFirestore(app); // Still needed for fetching user data from 'users' collection
 
 // --- DOM Elements ---
 const logoutButton = document.getElementById('logoutButton');
@@ -70,7 +81,7 @@ function showMessage(element, message, isError = false) {
     }
 }
 
-// --- Authentication Logic ---
+// --- Authentication Logic (using Firebase) ---
 async function handleLogout() {
     try {
         await signOut(auth);
@@ -81,16 +92,15 @@ async function handleLogout() {
 }
 
 // --- Data & Display Logic ---
+// This function still uses Firebase Firestore to fetch user name.
 async function displayUserInfo(user) {
     try {
-        // Fetch user's name from Firestore
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
             const userData = userDoc.data();
             if (userNameDisplay) userNameDisplay.textContent = userData.name || user.email;
             if (userNameDisplayHeader) userNameDisplayHeader.textContent = `مرحباً بك، ${userData.name || 'مستخدم'}!`;
         } else {
-            // Fallback if user document doesn't exist
             if (userNameDisplay) userNameDisplay.textContent = user.email;
             if (userNameDisplayHeader) userNameDisplayHeader.textContent = `مرحباً بك، ${user.email}!`;
         }
@@ -101,6 +111,7 @@ async function displayUserInfo(user) {
     }
 }
 
+// --- ADDING DATA (MODIFIED FOR SUPABASE) ---
 async function handleFlightFormSubmit(e, formNumber) {
     e.preventDefault();
     
@@ -137,7 +148,15 @@ async function handleFlightFormSubmit(e, formNumber) {
     });
     
     try {
-        await addDoc(collection(db, 'flights'), flightData);
+        // --- THIS IS THE NEW SUPABASE INSERT LOGIC ---
+        const { data, error } = await supabase
+            .from('flights') // The table name you created
+            .insert([flightData]);
+            
+        if (error) {
+            throw error; // Throw the error to be caught by the catch block
+        }
+        
         showMessage(messageContainer, `تمت إضافة بيانات الرحلة ${fltNoInput.value} بنجاح!`, false);
         form.reset();
         loadUserFlights(currentUser.uid);
@@ -147,6 +166,7 @@ async function handleFlightFormSubmit(e, formNumber) {
     }
 }
 
+// --- LOADING DATA (MODIFIED FOR SUPABASE) ---
 async function loadUserFlights(userId) {
     if (!flightsList) return;
     flightsList.innerHTML = '';
@@ -156,17 +176,21 @@ async function loadUserFlights(userId) {
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
 
-        const flightsQuery = query(
-            collection(db, 'flights'),
-            where('userId', '==', userId),
-            where('timestamp', '>=', startOfMonth.getTime()),
-            where('timestamp', '<=', endOfMonth.getTime()),
-            orderBy('timestamp', 'desc')
-        );
-
-        const querySnapshot = await getDocs(flightsQuery);
-
-        if (querySnapshot.empty) {
+        // --- THIS IS THE NEW SUPABASE QUERY LOGIC ---
+        const { data: flightsData, error } = await supabase
+            .from('flights')
+            .select('*') // Select all columns
+            .eq('userId', userId) // Where userId equals the current user's ID
+            .gte('timestamp', startOfMonth.getTime()) // Greater than or equal to start of month
+            .lte('timestamp', endOfMonth.getTime()) // Less than or equal to end of month
+            .order('timestamp', { ascending: false }); // Order by timestamp descending
+            
+        if (error) {
+            throw error;
+        }
+        
+        // --- The data is now a simple array, not a snapshot ---
+        if (!flightsData || flightsData.length === 0) {
             const row = flightsList.insertRow();
             const cell = row.insertCell(0);
             cell.colSpan = 6;
@@ -176,10 +200,10 @@ async function loadUserFlights(userId) {
             return;
         }
 
-        querySnapshot.forEach(doc => {
-            const flight = doc.data();
+        flightsData.forEach(flight => {
             const row = flightsList.insertRow();
-            row.dataset.docId = doc.id;
+            // Supabase returns the ID as a property of the data object
+            row.dataset.docId = flight.id;
 
             row.insertCell(0).textContent = flight.date || '';
             row.insertCell(1).textContent = flight.fltNo || '';
@@ -196,7 +220,8 @@ async function loadUserFlights(userId) {
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn small-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف';
-            deleteBtn.addEventListener('click', () => deleteFlight(doc.id));
+            // We pass the flight's ID to the delete function
+            deleteBtn.addEventListener('click', () => deleteFlight(flight.id));
 
             actionsCell.appendChild(exportBtn);
             actionsCell.appendChild(deleteBtn);
@@ -208,10 +233,20 @@ async function loadUserFlights(userId) {
     }
 }
 
+// --- DELETING DATA (MODIFIED FOR SUPABASE) ---
 async function deleteFlight(docId) {
     if (confirm("هل أنت متأكد من حذف هذه الرحلة؟")) {
         try {
-            await deleteDoc(doc(db, 'flights', docId));
+            // --- THIS IS THE NEW SUPABASE DELETE LOGIC ---
+            const { error } = await supabase
+                .from('flights')
+                .delete()
+                .eq('id', docId); // Delete the row where the 'id' column equals the docId
+
+            if (error) {
+                throw error;
+            }
+            
             showMessage(messageContainer, 'تم حذف الرحلة بنجاح!', false);
             const currentUser = auth.currentUser;
             if (currentUser) {
