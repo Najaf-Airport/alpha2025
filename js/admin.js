@@ -1,7 +1,17 @@
-// --- Firebase Modular SDK Imports (Version 9) ---
+// --- Supabase Imports and Initialization ---
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+
+// Using the keys you provided.
+const supabaseUrl = 'https://sbtxdlgdbajxnqrkggyh.supabase.co';
+const supabaseAnonKey = 'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNidHhkbGdkYmFqeG5xcmtnZ3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NjYyMjcsImV4cCI6MjA2NjU0MjIyN30.5j1vklOh3_XznXp0E-thW701FJV2T-8sxX1_1lY_EZo';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// --- Firebase Modular SDK Imports (Keep for Auth and users data) ---
+// We keep Firestore imports for the 'users' collection which is still in Firebase.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, getDoc, query, where, orderBy, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { exportAdminDataToDocx } from './docx-export.js';
 
 // --- Your web app's Firebase configuration ---
@@ -18,7 +28,7 @@ const firebaseConfig = {
 // --- Initialize Firebase and services ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = getFirestore(app); // We still need this for the 'users' collection
 
 // --- DOM Elements ---
 const logoutButton = document.getElementById('logoutButton');
@@ -76,7 +86,7 @@ function showMessage(element, message, isError = false) {
     }
 }
 
-// --- Authentication Logic ---
+// --- Authentication Logic (using Firebase) ---
 async function handleLogout() {
     try {
         await signOut(auth);
@@ -86,7 +96,7 @@ async function handleLogout() {
     }
 }
 
-// --- Flight Data & Statistics (Admin) ---
+// --- Flight Data & Statistics (Admin - MODIFIED FOR SUPABASE) ---
 async function loadAdminData() {
     if (!flightsTableBody || !userStatsContainer || !totalFlightsSpan || !monthFilter || !userFilter) return;
     
@@ -105,7 +115,7 @@ async function loadAdminData() {
     const endOfMonth = new Date(year, parseInt(month), 0, 23, 59, 59, 999);
 
     try {
-        // Fetch all users to map user IDs to names/emails
+        // --- Fetch all users from Firestore (not migrated yet) ---
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const usersMap = new Map();
         usersSnapshot.forEach(doc => usersMap.set(doc.id, doc.data()));
@@ -113,21 +123,24 @@ async function loadAdminData() {
         // Populate the user filter dropdown with all users
         populateUserFilter(usersMap);
         
-        // Fetch all flights for the selected month from all users
-        const flightsQuery = query(
-            collection(db, 'flights'),
-            where('timestamp', '>=', startOfMonth.getTime()),
-            where('timestamp', '<=', endOfMonth.getTime()),
-            orderBy('timestamp', 'asc')
-        );
-        const querySnapshot = await getDocs(flightsQuery);
+        // --- Fetch all flights from Supabase for the selected month (NEW) ---
+        const { data: flightsData, error } = await supabase
+            .from('flights')
+            .select('*')
+            .gte('timestamp', startOfMonth.getTime()) // >= timestamp
+            .lte('timestamp', endOfMonth.getTime())   // <= timestamp
+            .order('timestamp', { ascending: true });
         
+        if (error) {
+            throw error;
+        }
+
         let allFlightsFiltered = [];
         let userFlightCounts = {};
         
-        querySnapshot.forEach(doc => {
-            const flight = doc.data();
-            allFlightsFiltered.push({ id: doc.id, ...flight });
+        // --- Process the data from Supabase (it's an array, not a snapshot) ---
+        flightsData.forEach(flight => {
+            allFlightsFiltered.push({ id: flight.id, ...flight }); // Supabase returns `id` directly
             
             const userEmail = usersMap.get(flight.userId)?.email || 'غير معروف';
             userFlightCounts[userEmail] = (userFlightCounts[userEmail] || 0) + 1;
@@ -182,7 +195,7 @@ function displayAdminFlights(flights, usersMap) {
 
     flights.forEach(flight => {
         const row = flightsTableBody.insertRow();
-        row.dataset.docId = flight.id;
+        row.dataset.docId = flight.id; // Supabase returns the ID as a property
         
         row.insertCell(0).textContent = flight.date || '';
         row.insertCell(1).textContent = flight.fltNo || '';
@@ -233,6 +246,7 @@ function displayAdminStats(userFlightCounts, totalFlights, usersMap) {
     }
 }
 
+// --- EDITING DATA (MODIFIED FOR SUPABASE) ---
 async function editFlight(flight) {
     const newFltNo = prompt("تعديل رقم الرحلة (FLT.NO):", flight.fltNo);
     if (newFltNo === null) return;
@@ -240,10 +254,19 @@ async function editFlight(flight) {
     if (newNotes === null) return;
 
     try {
-        await updateDoc(doc(db, 'flights', flight.id), {
-            fltNo: newFltNo,
-            notes: newNotes
-        });
+        // --- THIS IS THE NEW SUPABASE UPDATE LOGIC ---
+        const { data, error } = await supabase
+            .from('flights')
+            .update({
+                fltNo: newFltNo,
+                notes: newNotes
+            })
+            .eq('id', flight.id); // Update the row where the 'id' matches
+            
+        if (error) {
+            throw error;
+        }
+
         showMessage(userManagementMessage, 'تم تحديث الرحلة بنجاح!', false);
         loadAdminData();
     } catch (error) {
@@ -252,10 +275,20 @@ async function editFlight(flight) {
     }
 }
 
+// --- DELETING DATA (MODIFIED FOR SUPABASE) ---
 async function deleteFlight(docId) {
     if (confirm("هل أنت متأكد من حذف هذه الرحلة؟")) {
         try {
-            await deleteDoc(doc(db, 'flights', docId));
+            // --- THIS IS THE NEW SUPABASE DELETE LOGIC ---
+            const { error } = await supabase
+                .from('flights')
+                .delete()
+                .eq('id', docId); // Delete the row where the 'id' matches
+                
+            if (error) {
+                throw error;
+            }
+
             showMessage(userManagementMessage, 'تم حذف الرحلة بنجاح!', false);
             loadAdminData();
         } catch (error) {
