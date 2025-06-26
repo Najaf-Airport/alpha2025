@@ -1,6 +1,6 @@
 // --- Supabase Imports and Initialization ---
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.44.4/dist/module/index.js'
 // Using the keys you provided.
 const supabaseUrl = 'https://sbtxdlgdbajxnqrkggyh.supabase.co';
 const supabaseAnonKey = 'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNidHhkbGdkYmFqeG5xcmtnZ3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NjYyMjcsImV4cCI6MjA2NjU0MjIyN30.5j1vklOh3_XznXp0E-thW701FJV2T-8sxX1_1lY_EZo';
