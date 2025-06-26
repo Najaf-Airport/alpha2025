@@ -15,13 +15,13 @@
             Aircraft Coordinators
         </h1>
         <div class="user-info">
-            <span id="userEmail"></span>
-            <button id="logoutBtn">تسجيل الخروج</button>
+            <span id="userNameDisplay"></span>
+            <button id="logoutButton">تسجيل الخروج</button>
         </div>
     </header>
 
     <main>
-        <section id="adminView" class="view">
+        <section id="adminView" class="view" id="admin-page-content">
             <h2>لوحة تحكم المسؤول</h2>
 
             <hr>
@@ -32,7 +32,7 @@
                 <input type="text" id="newUserName" placeholder="أدخل اسم المستخدم">
             </div>
             <div class="input-group-inline">
-                <label for="newUserrEmail">البريد الإلكتروني للمستخدم الجديد:</label>
+                <label for="newUserEmail">البريد الإلكتروني للمستخدم الجديد:</label>
                 <input type="email" id="newUserEmail" placeholder="أدخل البريد الإلكتروني">
             </div>
             <div class="input-group-inline">
@@ -62,22 +62,22 @@
             <h3 id="adminStatsTitle">إحصائيات الرحلات الشهرية</h3>
             <div class="controls-container">
                 <div class="input-group-inline">
-                    <label for="filterMonth">فلترة حسب الشهر:</label>
-                    <input type="month" id="filterMonth">
+                    <label for="monthFilter">فلترة حسب الشهر:</label>
+                    <input type="month" id="monthFilter">
                 </div>
                 <div class="input-group-inline">
-                    <label for="filterUser">فلترة حسب المستخدم:</label>
-                    <select id="filterUser">
+                    <label for="userFilter">فلترة حسب المستخدم:</label>
+                    <select id="userFilter">
                         <option value="all">جميع المستخدمين</option>
                         </select>
                 </div>
-                <button id="applyFiltersBtn" class="primary-button">تطبيق الفلترة</button>
+                <button id="filterButton" class="primary-button">تطبيق الفلترة</button>
             </div>
 
-            <p id="totalFlightsCount">عدد الرحلات الكلي: 0</p>
+            <p>عدد الرحلات الكلي: <span id="totalFlights">0</span></p>
             <div id="userStatsContainer">
                 </div>
-            <button id="exportAdminStatsToWordBtn" class="export-button">تصدير الإحصائيات إلى Word</button>
+            <button id="exportStatsButton" class="export-button">تصدير الإحصائيات إلى Word</button>
 
             <hr>
             
@@ -89,23 +89,17 @@
                             <th>التاريخ</th>
                             <th>FLT.NO</th>
                             <th>ON chocks</th>
-                            <th>Open Door</th>
-                            <th>Start Cleaning</th>
-                            <th>Complete Cleaning</th>
-                            <th>Ready Boarding</th>
-                            <th>Start Boarding</th>
-                            <th>Complete Boarding</th>
-                            <th>Close Door</th>
                             <th>Off chocks</th>
                             <th>الملاحظات</th>
+                            <th>اسم المستخدم</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="flightsTableBody">
                         </tbody>
                 </table>
             </div>
-            <button id="exportAdminAllFlightsToWordBtn" class="export-button">تصدير جميع الرحلات إلى Word</button>
+            <button id="exportDetailedButton" class="export-button">تصدير جميع الرحلات إلى Word</button>
         </section>
     </main>
 
@@ -114,6 +108,6 @@
     </footer>
 
     <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
-    <script type="module" src="js/script.js"></script>
-    </body>
+    <script type="module" src="js/admin.js"></script>
+</body>
 </html>
