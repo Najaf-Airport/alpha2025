@@ -1,14 +1,31 @@
-// --- Firebase & DOCX Imports (from global window object) ---
-const auth = firebase.auth();
-const db = firebase.firestore();
+// --- Firebase Modular SDK Imports ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, getDoc, query, where, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js";
 import { exportSingleFlightToDocx } from './docx-export.js';
+
+// --- Your web app's Firebase configuration ---
+const firebaseConfig = {
+    apiKey: "AIzaSyAIz4dQIZS41PcfL3qXOhc-ybouBZWMjuc",
+    authDomain: "najfe2025.firebaseapp.com",
+    projectId: "najfe2025",
+    storageBucket: "najfe2025.firebasestorage.app",
+    messagingSenderId: "113306479969",
+    appId: "1:113306479969:web:27a72a1c3da7918a18e920",
+    measurementId: "G-6FPSTZH2X1"
+};
+
+// --- Initialize Firebase and services ---
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // --- DOM Elements ---
 const logoutButton = document.getElementById('logoutButton');
 const userNameDisplay = document.getElementById('userNameDisplay');
 const userNameDisplayHeader = document.getElementById('userNameDisplay-header');
 const messageContainer = document.getElementById('messageContainer');
-const flightsList = document.getElementById('flightsList'); // Re-added
+const flightsList = document.getElementById('flightsList');
 
 // Get all four flight forms by their IDs
 const flightForm1 = document.getElementById('flightForm1');
@@ -19,7 +36,7 @@ const flightForm4 = document.getElementById('flightForm4');
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     // Check auth state and redirect if needed
-    auth.onAuthStateChanged(user => {
+    onAuthStateChanged(auth, user => {
         if (user) {
             if (user.email === 'ahmedaltalqani@gmail.com') {
                 // Admin logged in, but on user page
@@ -27,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Regular user logged in
                 displayUserInfo(user);
-                loadUserFlights(user.uid); // Re-added to load past flights
+                loadUserFlights(user.uid);
             }
         } else {
             // No user is signed in, redirect to login page
@@ -56,8 +73,7 @@ function showMessage(element, message, isError = false) {
 // --- Authentication Logic ---
 async function handleLogout() {
     try {
-        await auth.signOut();
-        // Redirect to login page is handled by the onAuthStateChanged listener
+        await signOut(auth);
     } catch (error) {
         console.error("Logout error:", error);
         showMessage(messageContainer, "حدث خطأ أثناء تسجيل الخروج.", true);
@@ -68,8 +84,8 @@ async function handleLogout() {
 async function displayUserInfo(user) {
     try {
         // Fetch user's name from Firestore
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
             const userData = userDoc.data();
             if (userNameDisplay) userNameDisplay.textContent = userData.name || user.email;
             if (userNameDisplayHeader) userNameDisplayHeader.textContent = `مرحباً بك، ${userData.name || 'مستخدم'}!`;
@@ -87,16 +103,15 @@ async function displayUserInfo(user) {
 
 async function handleFlightFormSubmit(e, formNumber) {
     e.preventDefault();
+    
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
-    // Get the specific form that was submitted
     const form = document.getElementById(`flightForm${formNumber}`);
     if (!form) return;
 
     const fltNoInput = document.getElementById(`fltNo${formNumber}`);
     
-    // Check if FLT.NO is filled, as it's the only required field.
     if (!fltNoInput.value.trim()) {
         showMessage(messageContainer, `الرجاء إدخال رقم الرحلة (FLT.NO) في البطاقة ${formNumber}.`, true);
         return;
@@ -105,54 +120,51 @@ async function handleFlightFormSubmit(e, formNumber) {
     const flightData = {
         userId: currentUser.uid,
         userEmail: currentUser.email,
-        timestamp: new Date().getTime() // Use timestamp in milliseconds for easier querying
+        timestamp: new Date().getTime()
     };
     
-    // Get user's name from Firestore
-    const userDoc = await db.collection('users').doc(currentUser.uid).get();
-    if (userDoc.exists) {
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    if (userDoc.exists()) {
         flightData.userName = userDoc.data().name;
     } else {
-        flightData.userName = currentUser.email; // Fallback
+        flightData.userName = currentUser.email;
     }
 
-    // Populate flightData object with form values
     const formData = new FormData(form);
     formData.forEach((value, key) => {
-        // Remove the form number suffix from the key (e.g., fltNo1 -> fltNo)
         const newKey = key.replace(formNumber, '');
         flightData[newKey] = value.trim() || '';
     });
-
+    
     try {
-        // Add a new document to the 'flights' collection
-        await db.collection('flights').add(flightData);
+        await addDoc(collection(db, 'flights'), flightData);
         showMessage(messageContainer, `تمت إضافة بيانات الرحلة ${fltNoInput.value} بنجاح!`, false);
-        form.reset(); // Clear the specific form
-        loadUserFlights(currentUser.uid); // Refresh the table after adding
+        form.reset();
+        loadUserFlights(currentUser.uid);
     } catch (error) {
         console.error("Error adding flight document: ", error);
-        showMessage(messageContainer, `حدث خطأ أثناء إضافة الرحلة ${fltNoInput.value}.`, true);
+        showMessage(messageContainer, `حدث خطأ أثناء إضافة الرحلة.`, true);
     }
 }
 
 async function loadUserFlights(userId) {
     if (!flightsList) return;
-    flightsList.innerHTML = ''; // Clear the table
+    flightsList.innerHTML = '';
 
     try {
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
 
-        // Fetch flights for the current user within the current month
-        const flightsRef = db.collection('flights');
-        const querySnapshot = await flightsRef
-            .where('userId', '==', userId)
-            .where('timestamp', '>=', startOfMonth.getTime()) // Query using number
-            .where('timestamp', '<=', endOfMonth.getTime()) // Query using number
-            .orderBy('timestamp', 'desc') // Order by latest first
-            .get();
+        const flightsQuery = query(
+            collection(db, 'flights'),
+            where('userId', '==', userId),
+            where('timestamp', '>=', startOfMonth.getTime()),
+            where('timestamp', '<=', endOfMonth.getTime()),
+            orderBy('timestamp', 'desc')
+        );
+
+        const querySnapshot = await getDocs(flightsQuery);
 
         if (querySnapshot.empty) {
             const row = flightsList.insertRow();
@@ -167,7 +179,7 @@ async function loadUserFlights(userId) {
         querySnapshot.forEach(doc => {
             const flight = doc.data();
             const row = flightsList.insertRow();
-            row.dataset.docId = doc.id; // Store Firebase document ID
+            row.dataset.docId = doc.id;
 
             row.insertCell(0).textContent = flight.date || '';
             row.insertCell(1).textContent = flight.fltNo || '';
@@ -181,7 +193,6 @@ async function loadUserFlights(userId) {
             exportBtn.innerHTML = '<i class="fas fa-file-word"></i> تصدير';
             exportBtn.addEventListener('click', () => exportSingleFlightToDocx(flight));
             
-            // Add a delete button as well for user convenience
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn small-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف';
@@ -200,11 +211,11 @@ async function loadUserFlights(userId) {
 async function deleteFlight(docId) {
     if (confirm("هل أنت متأكد من حذف هذه الرحلة؟")) {
         try {
-            await db.collection('flights').doc(docId).delete();
+            await deleteDoc(doc(db, 'flights', docId));
             showMessage(messageContainer, 'تم حذف الرحلة بنجاح!', false);
             const currentUser = auth.currentUser;
             if (currentUser) {
-                loadUserFlights(currentUser.uid); // Refresh the table
+                loadUserFlights(currentUser.uid);
             }
         } catch (error) {
             console.error("Error deleting flight:", error);
