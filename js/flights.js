@@ -8,6 +8,7 @@ const logoutButton = document.getElementById('logoutButton');
 const userNameDisplay = document.getElementById('userNameDisplay');
 const userNameDisplayHeader = document.getElementById('userNameDisplay-header');
 const messageContainer = document.getElementById('messageContainer');
+const flightsList = document.getElementById('flightsList'); // Re-added
 
 // Get all four flight forms by their IDs
 const flightForm1 = document.getElementById('flightForm1');
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Regular user logged in
                 displayUserInfo(user);
-                // loadUserFlights(user.uid); // This is removed as per user request
+                loadUserFlights(user.uid); // Re-added to load past flights
             }
         } else {
             // No user is signed in, redirect to login page
@@ -94,7 +95,6 @@ async function handleFlightFormSubmit(e, formNumber) {
     if (!form) return;
 
     const fltNoInput = document.getElementById(`fltNo${formNumber}`);
-    const dateInput = document.getElementById(`date${formNumber}`);
     
     // Check if FLT.NO is filled, as it's the only required field.
     if (!fltNoInput.value.trim()) {
@@ -102,22 +102,6 @@ async function handleFlightFormSubmit(e, formNumber) {
         return;
     }
     
-    // Check if at least one field is filled besides fltNo
-    const formData = new FormData(form);
-    let isFormEmpty = true;
-    for (const [key, value] of formData.entries()) {
-        if (key !== `fltNo${formNumber}` && key !== `date${formNumber}` && value.trim() !== '') {
-            isFormEmpty = false;
-            break;
-        }
-    }
-
-    // Don't save if only the flight number is entered
-    if (isFormEmpty && !fltNoInput.value.trim()) {
-         showMessage(messageContainer, `الرجاء ملء حقل رقم الرحلة (FLT.NO) على الأقل في البطاقة ${formNumber}.`, true);
-         return;
-    }
-
     const flightData = {
         userId: currentUser.uid,
         userEmail: currentUser.email,
@@ -133,6 +117,7 @@ async function handleFlightFormSubmit(e, formNumber) {
     }
 
     // Populate flightData object with form values
+    const formData = new FormData(form);
     formData.forEach((value, key) => {
         // Remove the form number suffix from the key (e.g., fltNo1 -> fltNo)
         const newKey = key.replace(formNumber, '');
@@ -144,8 +129,86 @@ async function handleFlightFormSubmit(e, formNumber) {
         await db.collection('flights').add(flightData);
         showMessage(messageContainer, `تمت إضافة بيانات الرحلة ${fltNoInput.value} بنجاح!`, false);
         form.reset(); // Clear the specific form
+        loadUserFlights(currentUser.uid); // Refresh the table after adding
     } catch (error) {
         console.error("Error adding flight document: ", error);
         showMessage(messageContainer, `حدث خطأ أثناء إضافة الرحلة ${fltNoInput.value}.`, true);
+    }
+}
+
+async function loadUserFlights(userId) {
+    if (!flightsList) return;
+    flightsList.innerHTML = ''; // Clear the table
+
+    try {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+
+        // Fetch flights for the current user within the current month
+        const flightsRef = db.collection('flights');
+        const querySnapshot = await flightsRef
+            .where('userId', '==', userId)
+            .where('timestamp', '>=', startOfMonth.getTime()) // Query using number
+            .where('timestamp', '<=', endOfMonth.getTime()) // Query using number
+            .orderBy('timestamp', 'desc') // Order by latest first
+            .get();
+
+        if (querySnapshot.empty) {
+            const row = flightsList.insertRow();
+            const cell = row.insertCell(0);
+            cell.colSpan = 6;
+            cell.textContent = 'لا توجد رحلات مسجلة لهذا الشهر.';
+            cell.style.textAlign = 'center';
+            cell.style.color = '#777';
+            return;
+        }
+
+        querySnapshot.forEach(doc => {
+            const flight = doc.data();
+            const row = flightsList.insertRow();
+            row.dataset.docId = doc.id; // Store Firebase document ID
+
+            row.insertCell(0).textContent = flight.date || '';
+            row.insertCell(1).textContent = flight.fltNo || '';
+            row.insertCell(2).textContent = flight.onChocksTime || '';
+            row.insertCell(3).textContent = flight.offChocksTime || '';
+            row.insertCell(4).textContent = flight.notes || '';
+
+            const actionsCell = row.insertCell(5);
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'export-btn small-btn';
+            exportBtn.innerHTML = '<i class="fas fa-file-word"></i> تصدير';
+            exportBtn.addEventListener('click', () => exportSingleFlightToDocx(flight));
+            
+            // Add a delete button as well for user convenience
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn small-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف';
+            deleteBtn.addEventListener('click', () => deleteFlight(doc.id));
+
+            actionsCell.appendChild(exportBtn);
+            actionsCell.appendChild(deleteBtn);
+        });
+
+    } catch (error) {
+        console.error("Error loading user flights: ", error);
+        showMessage(messageContainer, 'حدث خطأ أثناء تحميل الرحلات.', true);
+    }
+}
+
+async function deleteFlight(docId) {
+    if (confirm("هل أنت متأكد من حذف هذه الرحلة؟")) {
+        try {
+            await db.collection('flights').doc(docId).delete();
+            showMessage(messageContainer, 'تم حذف الرحلة بنجاح!', false);
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                loadUserFlights(currentUser.uid); // Refresh the table
+            }
+        } catch (error) {
+            console.error("Error deleting flight:", error);
+            showMessage(messageContainer, `فشل في حذف الرحلة: ${error.message}`, true);
+        }
     }
 }
